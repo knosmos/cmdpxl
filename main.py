@@ -9,7 +9,11 @@ import numpy as np
 if os.name == 'nt':
     import msvcrt
     def getch():
-        return msvcrt.getch().decode()
+        while True:
+            try:
+                return msvcrt.getch().decode()
+            except UnicodeDecodeError: # A keypress couldn't be decoded, ignore it
+                continue
 else:
     import sys, tty, termios
     fd = sys.stdin.fileno()
@@ -183,7 +187,9 @@ def main():
         color_select(color)
         draw([0,0,0], 1, 4, "[WASD]: move  [e]: draw  [esc]: quit")
         draw_image(img,pos)
+
         m = getch()
+
         if m == "w":
             pos[1] = (pos[1]-1)%img.shape[0]
         if m == "s":
