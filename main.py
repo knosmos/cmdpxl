@@ -222,10 +222,11 @@ def main():
     clear()
     hide_cursor()
     pos = [0,0]
-    color = [0,0,250]
+    color = [90,125,125]
     draw_image_box(img)
 
     dimensions = os.get_terminal_size()
+    history = []
 
     while True:
         # Repaint on window size change
@@ -236,7 +237,7 @@ def main():
 
         draw([-1], 1+padding_x, 1+padding_y, f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})", highlight_color)
         color_select(color)
-        draw([-1], 1+padding_x, 8+padding_y+img.shape[0], "[wasd]: move  [e]: draw  [esc]: quit", secondary_color)
+        draw([-1], 1+padding_x, 8+padding_y+img.shape[0], "[wasd]: move | [e]: draw | [z]: undo | [esc]: quit", secondary_color)
         draw_image(img,pos)
 
         m = getch()
@@ -251,7 +252,14 @@ def main():
             pos[0] = (pos[0]+1)%img.shape[1]
         
         if m == "e":
+            history.append(np.copy(img))
             img[pos[1]][pos[0]] = hsv_to_rgb(color)
+
+        if m == "z":
+            # Load most recent from history
+            if len(history) > 0:
+                img = history[-1]
+                history.pop(-1)
 
         if m == "u":
             color = change_hue(color,-18)
@@ -288,4 +296,5 @@ def main():
                 exit()
             hide_cursor()
             draw_image_box(img)
-main()
+
+if __name__ == "__main__": main()
