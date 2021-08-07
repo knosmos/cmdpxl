@@ -284,9 +284,11 @@ def main():
             print("[C]: Cancel")
             filters = [
                 ["G", "Grayscale", cv2.COLORMAP_BONE],
-                ["S", "Sepia", cv2.COLORMAP_OCEAN],
-                ["O", "Ocean", cv2.COLORMAP_PINK], # For some reason sepia is ocean and ocean is sepia??
-                ["H", "Heatmap", cv2.COLORMAP_JET]
+                ["S", "Sepia", cv2.COLORMAP_PINK],
+                ["O", "Ocean", cv2.COLORMAP_OCEAN],
+                ["H", "Heatmap", cv2.COLORMAP_JET],
+                ["I", "Invert", None],
+                ["B", "Blur", None]
             ]
             for i in filters:
                 print(f"[{i[0]}]: {i[1]}")
@@ -296,11 +298,17 @@ def main():
             clear()
             if option != "C":
                 history.append(np.copy(img))
-                grayscale = cv2.cvtColor(img, cv2.cv2.COLOR_RGB2GRAY)
-                for i in filters:
-                    if i[0] == option:
-                        filtered = cv2.applyColorMap(grayscale, i[2])
-                img = filtered
+                if option == "I":
+                    img = cv2.bitwise_not(img)
+                elif option == "B":
+                    img = cv2.blur(img,(2,2))
+                else:
+                    grayscale = cv2.cvtColor(img, cv2.cv2.COLOR_RGB2GRAY)
+                    for i in filters:
+                        if i[0] == option:
+                            filtered = cv2.applyColorMap(grayscale, i[2])
+                            filtered = cv2.cvtColor(filtered, cv2.COLOR_BGR2RGB)
+                    img = filtered
             hide_cursor()
             draw_image_box(img)
 
