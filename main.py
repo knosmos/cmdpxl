@@ -237,7 +237,7 @@ def main():
 
         draw([-1], 1+padding_x, 1+padding_y, f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})", highlight_color)
         color_select(color)
-        draw([-1], 1+padding_x, 8+padding_y+img.shape[0], "[wasd]: move | [e]: draw | [z]: undo | [esc]: quit", secondary_color)
+        draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[wasd]: move | [e]: draw | [z]: undo | [esc]: quit", secondary_color)
         draw_image(img,pos)
 
         m = getch()
