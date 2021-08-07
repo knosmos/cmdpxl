@@ -215,9 +215,6 @@ def main():
         width = int(input("New image width: "))
         img = np.zeros((height,width,3), np.uint8)
         img[:,:,:] = 255
-    
-    # img = np.zeros((6,12,3), np.uint8)
-    # img[:,:,:] = 255
 
     clear()
     hide_cursor()
@@ -237,11 +234,12 @@ def main():
 
         draw([-1], 1+padding_x, 1+padding_y, f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})", highlight_color)
         color_select(color)
-        draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[wasd]: move | [e]: draw | [z]: undo | [esc]: quit", secondary_color)
+        draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[wasd]: move | [e]: draw | [z]: undo | [f]: filters | [esc]: quit", secondary_color)
         draw_image(img,pos)
 
         m = getch()
 
+        ''' MOVEMENT '''
         if m == "w":
             pos[1] = (pos[1]-1)%img.shape[0]
         if m == "s":
@@ -251,7 +249,8 @@ def main():
         if m == "d":
             pos[0] = (pos[0]+1)%img.shape[1]
         
-        if m == "e":
+        ''' DRAWING '''
+        if m == "e" or m == " ":
             history.append(np.copy(img))
             img[pos[1]][pos[0]] = hsv_to_rgb(color)
 
@@ -261,6 +260,7 @@ def main():
                 img = history[-1]
                 history.pop(-1)
 
+        ''' COLOR CHANGE '''
         if m == "u":
             color = change_hue(color,-18)
         if m == "i":
@@ -275,6 +275,36 @@ def main():
         if m == "l":
             color = change_value(color,25)
 
+        ''' FILTERS '''
+        if m == "f":
+            show_cursor()
+            clear()
+            draw([-1], 1, 1, "APPLY FILTER", highlight_color)
+            print()
+            print("[C]: Cancel")
+            filters = [
+                ["G", "Grayscale", cv2.COLORMAP_BONE],
+                ["S", "Sepia", cv2.COLORMAP_OCEAN],
+                ["O", "Ocean", cv2.COLORMAP_PINK], # For some reason sepia is ocean and ocean is sepia??
+                ["H", "Heatmap", cv2.COLORMAP_JET]
+            ]
+            for i in filters:
+                print(f"[{i[0]}]: {i[1]}")
+            option = " "
+            while not (option in [i[0] for i in filters] or option == "C"):
+                option = getch().upper()
+            clear()
+            if option != "C":
+                history.append(np.copy(img))
+                grayscale = cv2.cvtColor(img, cv2.cv2.COLOR_RGB2GRAY)
+                for i in filters:
+                    if i[0] == option:
+                        filtered = cv2.applyColorMap(grayscale, i[2])
+                img = filtered
+            hide_cursor()
+            draw_image_box(img)
+
+        ''' QUIT '''
         if m == "\x1b": # esc
             show_cursor()
             clear()
