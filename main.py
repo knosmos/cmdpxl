@@ -6,9 +6,11 @@ import numpy as np
 ''' DISPLAY PARAMS '''
 highlight_color = [214, 39, 112]
 secondary_color = [53, 204, 242]
-edge_color = [77, 77, 77]
+edge_color = [200, 200, 200]
 padding_x = 1
 padding_y = 1
+
+responsive_padding = True # Change x padding on terminal resize
 
 ''' INPUT '''
 # Define the getch function used to get keyboard input
@@ -76,6 +78,7 @@ def draw(color, x, y, text, textcolor = None):
 
 # Draws the image box
 def draw_image_box(img):
+    global padding_x
     offset_y = 6
     y, x, _ = img.shape
     box_top = "╭"+"─"*(x*2)+"╮"
@@ -99,6 +102,22 @@ def draw_image(img, pos):
                 text = "  "
             draw(img[j][i], i*2+2+padding_x, j+1+offset_y+padding_y, text)
     sys.stdout.flush()
+
+''' FLOOD FILL '''
+def flood_fill(pos, img, color, original_color):
+    img[pos[1]][pos[0]] = color
+    neighbors = [
+        [pos[1]-1, pos[0]],
+        [pos[1]+1, pos[0]],
+        [pos[1], pos[0]-1],
+        [pos[1], pos[0]+1]
+    ]
+    for i, j in neighbors:
+        if i >= 0 and j >= 0 and i < img.shape[0] and j < img.shape[1]:
+            if np.array_equal(img[i][j], original_color) and not np.array_equal(img[i][j], color):
+                img = flood_fill([j,i], np.copy(img), color, original_color)
+    return img
+    
 
 ''' COLOR SELECTION '''
 def rgb_to_hsv(color):
@@ -195,7 +214,8 @@ def change_value(color, amount):
 
 ''' MAIN '''
 def main():
-    
+    global padding_x, padding_y
+
     clear()
     draw([-1], 1, 1, "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", highlight_color)
     print()
@@ -214,15 +234,14 @@ def main():
         height = int(input("New image height: "))
         width = int(input("New image width: "))
         img = np.zeros((height,width,3), np.uint8)
-        img[:,:,:] = 255
+        img[:,:,:] = 250
 
     clear()
     hide_cursor()
     pos = [0,0]
     color = [90,125,125]
-    draw_image_box(img)
 
-    dimensions = os.get_terminal_size()
+    dimensions = [0,0]
     history = []
 
     while True:
@@ -230,11 +249,14 @@ def main():
         if os.get_terminal_size() != dimensions:
             clear()
             dimensions = os.get_terminal_size()
+            if responsive_padding:
+                padding_x = (dimensions[0] - img.shape[1]*2)//2
             draw_image_box(img)
 
         draw([-1], 1+padding_x, 1+padding_y, f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})", highlight_color)
         color_select(color)
-        draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[wasd]: move | [e]: draw | [z]: undo | [f]: filters | [esc]: quit", secondary_color)
+        draw([-1], 1+padding_x, 8+padding_y+img.shape[0], "[wasd] move │ [e] draw    │ [f] fill", secondary_color)
+        draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[z] undo    │ [t] filters │ [esc] quit", secondary_color)
         draw_image(img,pos)
 
         m = getch()
@@ -253,6 +275,10 @@ def main():
         if m == "e" or m == " ":
             history.append(np.copy(img))
             img[pos[1]][pos[0]] = hsv_to_rgb(color)
+
+        if m == "f":
+            history.append(np.copy(img))
+            img = flood_fill(pos, img, hsv_to_rgb(color), np.copy(img[pos[1]][pos[0]]))
 
         if m == "z":
             # Load most recent from history
@@ -276,7 +302,7 @@ def main():
             color = change_value(color,25)
 
         ''' FILTERS '''
-        if m == "f":
+        if m == "t":
             show_cursor()
             clear()
             draw([-1], 1, 1, "APPLY FILTER", highlight_color)
@@ -301,7 +327,7 @@ def main():
                 if option == "I":
                     img = cv2.bitwise_not(img)
                 elif option == "B":
-                    img = cv2.blur(img,(2,2))
+                    img = cv2.blur(img,(1,2))
                 else:
                     grayscale = cv2.cvtColor(img, cv2.cv2.COLOR_RGB2GRAY)
                     for i in filters:
