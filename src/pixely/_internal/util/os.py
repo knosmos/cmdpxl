@@ -16,11 +16,12 @@ def get_getch():
     
     if os.name == "nt":
         import msvcrt
-        while True:
-            try:
-                return msvcrt.getch().decode()
-            except UnicodeDecodeError: # A keypress couldn't be decoded, ignore it
-                continue
+        def getch():
+            while True:
+                try:
+                    return msvcrt.getch().decode()
+                except UnicodeDecodeError: # A keypress couldn't be decoded, ignore it
+                    continue
     else:
         import sys, tty, termios
         fd = sys.stdin.fileno()
