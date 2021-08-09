@@ -275,12 +275,17 @@ def main():
         option = args.mode
         if not option in ["open","create"]:
             parser.print_help()
+            print("error: mode must be 'open' or 'create'")
             sys.exit()
         
         filename = args.filename
         if args.size:
             width, height = args.size
-    
+        elif option == "create":
+            parser.print_help()
+            print("error: dimensions must be included if creating image")
+            sys.exit()
+
     # Load existing image
     if option.lower() == "o" or option.lower() == "open":
         img = cv2.imread(filename)
