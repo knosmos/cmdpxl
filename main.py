@@ -5,15 +5,41 @@ import numpy as np
 from threading import Thread  # Constantly check for terminal size update
 import time
 
+
+class Color:
+    def __init__(self, r: int, g: int, b: int):
+        self.all_colors = [r, g, b]
+        self.r, self.g, self.b = self.all_colors
+
+    def __getitem__(self, item: int):
+        return self.all_colors[item]
+
+    def __setitem__(self, key, value):
+        self.all_colors[key] = value
+
+    def __iter__(self):
+        return iter(self.all_colors)
+
+    def copy(self):
+        return Color(self.r, self.g, self.b)
+
+
+# class Pos:
+#     def __init__(self, x: int, y: int):
+#         self.x, self.y = x, y
+
+
 """ DISPLAY PARAMS """
-highlight_color = [214, 39, 112]
-secondary_color = [53, 204, 242]
-edge_color = [200, 200, 200]
+highlight_color = Color(214, 39, 112)
+secondary_color = Color(53, 204, 242)
+edge_color = Color(200, 200, 200)
 
 padding_y = 1
 responsive_padding = True  # Change x padding on terminal resize
 
-color = [90, 125, 125]  # Default starting color
+
+color = Color(90, 125, 125)  # Default starting color
+# pos = Pos(0, 0)  # Default cursor position
 pos = [0, 0]  # Default cursor position
 
 """ GLOBALS """
@@ -79,14 +105,14 @@ def show_cursor():
 
 
 # Prints text at x, y with background color
-def draw(color, x, y, text, textcolor=None):
+def draw(color: Color, x, y, text, textcolor: Color = None):
     # ANSI Escape sequences
     # Somehow this was easier than curses or rich
 
     # Make text color black if background is too light
-    if sum(color) > 350 and textcolor == None:
+    if sum(list(color)) > 350 and textcolor is None:
         text = f"\x1b[38;2;0;0;0m{text}\x1b[0m"
-    if textcolor != None:
+    if textcolor is not None:
         text = f"\x1b[38;2;{textcolor[0]};{textcolor[1]};{textcolor[2]}m{text}\x1b[0m"
 
     if color[0] != -1:  # transparent
@@ -132,8 +158,8 @@ def draw_image(img, pos):
 """ FLOOD FILL """
 
 
-def flood_fill(pos, img, color, original_color):
-    img[pos[1]][pos[0]] = color
+def flood_fill(pos, img, color: Color, original_color):
+    img[pos[1]][pos[0]] = list(color)
     neighbors = [
         [pos[1] - 1, pos[0]],
         [pos[1] + 1, pos[0]],
@@ -142,8 +168,8 @@ def flood_fill(pos, img, color, original_color):
     ]
     for i, j in neighbors:
         if i >= 0 and j >= 0 and i < img.shape[0] and j < img.shape[1]:
-            if np.array_equal(img[i][j], original_color) and not np.array_equal(
-                img[i][j], color
+            if np.array_equal(img[i][j], list(original_color)) and not np.array_equal(
+                img[i][j], list(color)
             ):
                 img = flood_fill([j, i], np.copy(img), color, original_color)
     return img
@@ -152,20 +178,22 @@ def flood_fill(pos, img, color, original_color):
 """ COLOR SELECTION """
 
 
-def rgb_to_hsv(color):
-    arr = np.uint8([[color]])
-    return cv2.cvtColor(arr, cv2.COLOR_RGB2HSV)[0][0]
+def rgb_to_hsv(color: Color) -> Color:
+    arr = np.uint8([[list(color)]])
+    r, g, b = cv2.cvtColor(arr, cv2.COLOR_RGB2HSV)[0][0]
+    return Color(r, g, b)
 
 
-def hsv_to_rgb(color):
-    arr = np.uint8([[color]])
-    return cv2.cvtColor(arr, cv2.COLOR_HSV2RGB)[0][0]
+def hsv_to_rgb(color: Color):
+    arr = np.uint8([[list(color)]])
+    r, g, b = cv2.cvtColor(arr, cv2.COLOR_HSV2RGB)[0][0]
+    return Color(r, g, b)
 
 
 # print(hsv_to_rgb([0,0,0]))
 
 # Draws the color selection display
-def color_select(color, offset_y=1):
+def color_select(color: Color, offset_y=1):
     # Draw the edge box
     section_width = 11
     box_height = 3
@@ -196,7 +224,7 @@ def color_select(color, offset_y=1):
     # hsv_color = rgb_to_hsv(color)
     hsv_color = color
     for h in range(0, 181, 180 // ticks):
-        ncolor = [h, 255, 255]
+        ncolor = Color(h, 255, 255)
         ncolor_rgb = hsv_to_rgb(ncolor)
         if round(hsv_color[0] / 18) * 18 == h:
             text = "●"
@@ -254,16 +282,16 @@ def color_select(color, offset_y=1):
 
 # color_select([255,200,200])
 
-# Changes hue by amount (returns RGB color)
-def change_hue(color, amount):
+def change_hue(color: Color, amount: int) -> Color:
     hsv_color = color  # rgb_to_hsv(color)
     hsv_color[0] += amount
     hsv_color[0] = min(max(0, hsv_color[0]), 180) // 18 * 18
-    return hsv_color  # hsv_to_rgb(hsv_color)
+    r, g, b = hsv_color
+    return Color(r, g, b)  # hsv_to_rgb(hsv_color)
 
 
 # Changes hue by amount (returns RGB color)
-def change_saturation(color, amount):
+def change_saturation(color: Color, amount: int) -> Color:
     hsv_color = color  # rgb_to_hsv(color)
     hsv_color[1] += amount
     hsv_color[1] = min(max(0, hsv_color[1]), 255) // 25 * 25
@@ -271,7 +299,7 @@ def change_saturation(color, amount):
 
 
 # Changes hue by amount (returns RGB color)
-def change_value(color, amount):
+def change_value(color: Color, amount: int) -> Color:
     hsv_color = color  # rgb_to_hsv(color)
     hsv_color[2] += amount
     hsv_color[2] = min(max(0, hsv_color[2]), 255) // 25 * 25
@@ -281,7 +309,7 @@ def change_value(color, amount):
 """ RESPONSIVENESS """
 
 
-def resize(filename, img):
+def resize(filename: str, img: np.ndarray) -> None:
     global padding_x, in_menu
     dimensions = [0, 0]
     while True:
@@ -299,7 +327,7 @@ def resize(filename, img):
 """ MAIN """
 
 
-def draw_interface(filename, img):
+def draw_interface(filename: str, img: np.ndarray) -> None:
     # draws (most of) the paint ui
     # menus are handled separately, and imgbox is drawn separately
     # to reduce flickering
@@ -379,7 +407,7 @@ def main():
         """ DRAWING """
         if m == "e" or m == " ":
             history.append(np.copy(img))
-            img[pos[1]][pos[0]] = hsv_to_rgb(color)
+            img[pos[1]][pos[0]] = list(hsv_to_rgb(color))
 
         if m == "f":
             history.append(np.copy(img))
