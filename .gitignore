@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+/build/
+/dist/
+*.egg
+*.eggs
+*.egg-info/
+MANIFEST
+
+# Documentation
+docs/build/
+
+# mypy
+.mypy_cache/
+
+# Unit test / coverage reports
+.[nt]ox/
+htmlcov/
+.coverage
+.coverage.*
+.*cache
+nosetests.xml
+coverage.xml
+*.cover
+tests/data/common_wheels/
+
+# Misc
+*~
+.*.sw?
+.env/
+.venv/
+
+# For IntelliJ IDEs (basically PyCharm)
+.idea/
+
+# For Visual Studio Code
+.vscode/
+
+# For Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Scratch Pad for experiments
+.scratch/
+
+# Mac
+.DS_Store
+
+# Profiling related artifacts
+*.prof
