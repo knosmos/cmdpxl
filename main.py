@@ -7,26 +7,23 @@ import time
 
 
 class Color:
-    def __init__(self, r: int, g: int, b: int):
-        self.all_colors = [r, g, b]
-        self.r, self.g, self.b = self.all_colors
-
-    def __getitem__(self, item: int):
-        return self.all_colors[item]
-
-    def __setitem__(self, key, value):
-        self.all_colors[key] = value
+    def __init__(self, *rgb_colors):
+        # Check if passing a tuple with three elements, like on draw_image
+        self.r, self.g, self.b = rgb_colors[0] if len(rgb_colors) == 1 else rgb_colors
 
     def __iter__(self):
-        return iter(self.all_colors)
+        return iter((self.r, self.g, self.b))
 
     def copy(self):
         return Color(self.r, self.g, self.b)
 
 
-# class Pos:
-#     def __init__(self, x: int, y: int):
-#         self.x, self.y = x, y
+class Pos:
+    def __init__(self, x: int, y: int):
+        self.x, self.y = x, y
+
+    def __iter__(self):
+        return iter((self.x, self.y))
 
 
 """ DISPLAY PARAMS """
@@ -39,8 +36,9 @@ responsive_padding = True  # Change x padding on terminal resize
 
 
 color = Color(90, 125, 125)  # Default starting color
-# pos = Pos(0, 0)  # Default cursor position
-pos = [0, 0]  # Default cursor position
+pos = Pos(0, 0)  # Default cursor position
+
+TRANSPARENT = Color(-1, 0, 0)
 
 """ GLOBALS """
 # These are necessary for the responsiveness thread to work
@@ -90,7 +88,6 @@ else:
         os.system("clear")
 
 
-# Hide/show the cursor
 def hide_cursor():
     sys.stdout.write("\033[?25l")
     sys.stdout.flush()
@@ -104,8 +101,15 @@ def show_cursor():
 """ IMAGE DRAWING """
 
 
-# Prints text at x, y with background color
-def draw(color: Color, x, y, text, textcolor: Color = None):
+def draw(color: Color, text_pos: Pos, text, textcolor: Color = None):
+    """
+    Prints text at x, y with background color
+    :param text_pos:
+    :param color:
+    :param text:
+    :param textcolor:
+    :return:
+    """
     # ANSI Escape sequences
     # Somehow this was easier than curses or rich
 
@@ -113,65 +117,82 @@ def draw(color: Color, x, y, text, textcolor: Color = None):
     if sum(list(color)) > 350 and textcolor is None:
         text = f"\x1b[38;2;0;0;0m{text}\x1b[0m"
     if textcolor is not None:
-        text = f"\x1b[38;2;{textcolor[0]};{textcolor[1]};{textcolor[2]}m{text}\x1b[0m"
+        text = f"\x1b[38;2;{textcolor.r};{textcolor.g};{textcolor.b}m{text}\x1b[0m"
 
-    if color[0] != -1:  # transparent
-        color_start = f"\x1b[48;2;{color[0]};{color[1]};{color[2]}m"
+    if color is not TRANSPARENT:
+        color_start = f"\x1b[48;2;{color.r};{color.g};{color.b}m"
         color_end = "\x1b[0m"
     else:
         color_start = ""
         color_end = ""
-    position_start = f"\x1b7\x1b[{y};{x}f"
+    position_start = f"\x1b7\x1b[{text_pos.y};{text_pos.x}f"
     position_end = "\x1b8"
     sys.stdout.write(color_start + position_start + text + position_end + color_end)
 
 
-# Draws the image box
 def draw_image_box(img):
+    """
+    Draws the image box
+    :param img:
+    :return:
+    """
     global padding_x
     offset_y = 6
     y, x, _ = img.shape
     box_top = "╭" + "─" * (x * 2) + "╮"
     box_mid = "│" + " " * (x * 2) + "│"
     box_bot = "╰" + "─" * (x * 2) + "╯"
-    draw([-1], 1 + padding_x, offset_y + padding_y, box_top, edge_color)
+    draw(TRANSPARENT, Pos(x=1 + padding_x, y=offset_y + padding_y), box_top, edge_color)
     for i in range(y):
-        draw([-1], 1 + padding_x, offset_y + padding_y + 1 + i, box_mid, edge_color)
-    draw([-1], 1 + padding_x, offset_y + padding_y + 1 + y, box_bot, edge_color)
+        draw(
+            TRANSPARENT,
+            Pos(x=1 + padding_x, y=offset_y + padding_y + 1 + i),
+            box_mid,
+            edge_color,
+        )
+    draw(
+        TRANSPARENT,
+        Pos(x=1 + padding_x, y=offset_y + padding_y + 1 + y),
+        box_bot,
+        edge_color,
+    )
 
 
-# Prints an image
-def draw_image(img, pos):
+def draw_image(img, img_pos: Pos):
     offset_y = 6
     y, x, _ = img.shape
 
     for j in range(y):
         for i in range(x):
-            if i == pos[0] and j == pos[1]:
+            if i == img_pos.x and j == img_pos.y:
                 text = "[]"
             else:
                 text = "  "
-            draw(img[j][i], i * 2 + 2 + padding_x, j + 1 + offset_y + padding_y, text)
+            draw(
+                Color(img[j][i]),
+                Pos(x=i * 2 + 2 + padding_x, y=j + 1 + offset_y + padding_y),
+                text,
+            )
     sys.stdout.flush()
 
 
 """ FLOOD FILL """
 
 
-def flood_fill(pos, img, color: Color, original_color):
-    img[pos[1]][pos[0]] = list(color)
+def flood_fill(fill_pos: Pos, img, fill_color: Color, original_color):
+    img[fill_pos.y][fill_pos.x] = list(fill_color)
     neighbors = [
-        [pos[1] - 1, pos[0]],
-        [pos[1] + 1, pos[0]],
-        [pos[1], pos[0] - 1],
-        [pos[1], pos[0] + 1],
+        Pos(fill_pos.y - 1, fill_pos.x),
+        Pos(fill_pos.y + 1, fill_pos.x),
+        Pos(fill_pos.y, fill_pos.x - 1),
+        Pos(fill_pos.y, fill_pos.x + 1),
     ]
     for i, j in neighbors:
         if i >= 0 and j >= 0 and i < img.shape[0] and j < img.shape[1]:
             if np.array_equal(img[i][j], list(original_color)) and not np.array_equal(
-                img[i][j], list(color)
+                img[i][j], list(fill_color)
             ):
-                img = flood_fill([j, i], np.copy(img), color, original_color)
+                img = flood_fill(Pos(j, i), np.copy(img), fill_color, original_color)
     return img
 
 
@@ -184,16 +205,19 @@ def rgb_to_hsv(color: Color) -> Color:
     return Color(r, g, b)
 
 
-def hsv_to_rgb(color: Color):
+def hsv_to_rgb(color: Color) -> Color:
     arr = np.uint8([[list(color)]])
     r, g, b = cv2.cvtColor(arr, cv2.COLOR_HSV2RGB)[0][0]
     return Color(r, g, b)
 
 
-# print(hsv_to_rgb([0,0,0]))
-
-# Draws the color selection display
 def color_select(color: Color, offset_y=1):
+    """
+    Draws the color selection display
+    :param color:
+    :param offset_y:
+    :return:
+    """
     # Draw the edge box
     section_width = 11
     box_height = 3
@@ -201,20 +225,32 @@ def color_select(color: Color, offset_y=1):
     box_mid = "│" + "│".join([" " * section_width] * 4) + "│"
     box_bot = "╰" + "┴".join(["─" * section_width] * 4) + "╯"
 
-    draw([-1], 1 + padding_x, 1 + offset_y + padding_y, box_top, edge_color)
-    for i in range(box_height):
-        draw([-1], 1 + padding_x, 1 + offset_y + padding_y + 1 + i, box_mid, edge_color)
     draw(
-        [-1], 1 + padding_x, 1 + offset_y + padding_y + box_height, box_bot, edge_color
+        TRANSPARENT,
+        Pos(x=1 + padding_x, y=1 + offset_y + padding_y),
+        box_top,
+        edge_color,
+    )
+    for i in range(box_height):
+        draw(
+            TRANSPARENT,
+            Pos(x=1 + padding_x, y=1 + offset_y + padding_y + 1 + i),
+            box_mid,
+            edge_color,
+        )
+    draw(
+        TRANSPARENT,
+        Pos(x=1 + padding_x, y=1 + offset_y + padding_y + box_height),
+        box_bot,
+        edge_color,
     )
 
     # Draw instruction text
     instructions = ["[u/j]: hue", "[i/k]: sat", "[o/l]: val", "current"]
     for i in range(len(instructions)):
         draw(
-            [-1],
-            1 + padding_x + 1 + i * 12,
-            1 + offset_y + padding_y + 1,
+            TRANSPARENT,
+            Pos(x=1 + padding_x + 1 + i * 12, y=1 + offset_y + padding_y + 1),
             instructions[i],
             secondary_color,
         )
@@ -226,84 +262,81 @@ def color_select(color: Color, offset_y=1):
     for h in range(0, 181, 180 // ticks):
         ncolor = Color(h, 255, 255)
         ncolor_rgb = hsv_to_rgb(ncolor)
-        if round(hsv_color[0] / 18) * 18 == h:
+        if round(hsv_color.r / 18) * 18 == h:
             text = "●"
         else:
             text = " "
         draw(
             ncolor_rgb,
-            h // (180 // ticks) + 1 + padding_x + 1,
-            2 + offset_y + padding_y + 1,
+            Pos(
+                x=h // (180 // ticks) + 1 + padding_x + 1,
+                y=2 + offset_y + padding_y + 1,
+            ),
             text,
         )
 
     # Draw sat display
     for s in range(0, 251, 250 // ticks):
         ncolor = hsv_color.copy()
-        ncolor[1] = s
+        ncolor.g = s
         ncolor_rgb = hsv_to_rgb(ncolor)
         # This is not the best way but at this point I'm too tired to care
-        if hsv_color[1] // (250 / ticks) * 250 // ticks == s:
+        if hsv_color.g // (250 / ticks) * 250 // ticks == s:
             text = "●"
         else:
             text = " "
         draw(
             ncolor_rgb,
-            s // (250 // ticks) + ticks + 3 + padding_x + 1,
-            2 + offset_y + padding_y + 1,
+            Pos(
+                x=s // (250 // ticks) + ticks + 3 + padding_x + 1,
+                y=2 + offset_y + padding_y + 1,
+            ),
             text,
         )
 
     # Draw val display
     for v in range(0, 251, 250 // ticks):
         ncolor = hsv_color.copy()
-        ncolor[2] = v
+        ncolor.b = v
         ncolor_rgb = hsv_to_rgb(ncolor)
-        if hsv_color[2] // (250 / ticks) * 250 / ticks == v:
+        if hsv_color.b // (250 / ticks) * 250 / ticks == v:
             text = "●"
         else:
             text = " "
             # print(hsv_color[2])
         draw(
             ncolor_rgb,
-            v // (250 // ticks) + 2 * ticks + 5 + padding_x + 1,
-            2 + offset_y + padding_y + 1,
+            Pos(
+                x=v // (250 // ticks) + 2 * ticks + 5 + padding_x + 1,
+                y=2 + offset_y + padding_y + 1,
+            ),
             text,
         )
 
     # Draw current color
     draw(
         hsv_to_rgb(hsv_color),
-        37 + padding_x + 1,
-        2 + offset_y + padding_y + 1,
+        Pos(x=37 + padding_x + 1, y=2 + offset_y + padding_y + 1),
         " " * 11,
     )
 
 
-# color_select([255,200,200])
-
-def change_hue(color: Color, amount: int) -> Color:
-    hsv_color = color  # rgb_to_hsv(color)
-    hsv_color[0] += amount
-    hsv_color[0] = min(max(0, hsv_color[0]), 180) // 18 * 18
-    r, g, b = hsv_color
-    return Color(r, g, b)  # hsv_to_rgb(hsv_color)
-
-
-# Changes hue by amount (returns RGB color)
-def change_saturation(color: Color, amount: int) -> Color:
-    hsv_color = color  # rgb_to_hsv(color)
-    hsv_color[1] += amount
-    hsv_color[1] = min(max(0, hsv_color[1]), 255) // 25 * 25
+def change_hue(hsv_color: Color, amount: int) -> Color:
+    hsv_color.r += amount
+    hsv_color.r = min(max(0, hsv_color.r), 180) // 18 * 18
     return hsv_color  # hsv_to_rgb(hsv_color)
 
 
-# Changes hue by amount (returns RGB color)
-def change_value(color: Color, amount: int) -> Color:
-    hsv_color = color  # rgb_to_hsv(color)
-    hsv_color[2] += amount
-    hsv_color[2] = min(max(0, hsv_color[2]), 255) // 25 * 25
+def change_saturation(hsv_color: Color, amount: int) -> Color:
+    hsv_color.g += amount
+    hsv_color.g = min(max(0, hsv_color.g), 255) // 25 * 25
     return hsv_color  # hsv_to_rgb(hsv_color)
+
+
+def change_value(hsv_color: Color, amount: int) -> Color:
+    hsv_color.b += amount
+    hsv_color.b = min(max(0, hsv_color.b), 255) // 25 * 25
+    return hsv_color
 
 
 """ RESPONSIVENESS """
@@ -332,24 +365,21 @@ def draw_interface(filename: str, img: np.ndarray) -> None:
     # menus are handled separately, and imgbox is drawn separately
     # to reduce flickering
     draw(
-        [-1],
-        1 + padding_x,
-        1 + padding_y,
+        TRANSPARENT,
+        Pos(x=1 + padding_x, y=1 + padding_y),
         f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})",
         highlight_color,
     )
     color_select(color)
     draw(
-        [-1],
-        1 + padding_x,
-        8 + padding_y + img.shape[0],
+        TRANSPARENT,
+        Pos(x=1 + padding_x, y=8 + padding_y + img.shape[0]),
         "[wasd] move │ [e] draw    │ [f] fill",
         secondary_color,
     )
     draw(
-        [-1],
-        1 + padding_x,
-        9 + padding_y + img.shape[0],
+        TRANSPARENT,
+        Pos(x=1 + padding_x, y=9 + padding_y + img.shape[0]),
         "[z] undo    │ [t] filters │ [esc] quit",
         secondary_color,
     )
@@ -360,7 +390,12 @@ def main():
     global padding_x, padding_y, color, pos, in_menu
 
     clear()
-    draw([-1], 1, 1, "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", highlight_color)
+    draw(
+        TRANSPARENT,
+        Pos(x=1, y=1),
+        "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR",
+        highlight_color,
+    )
     print()
     print("[O]: Open file")
     print("[C]: Create new file")
@@ -396,22 +431,22 @@ def main():
 
         """ MOVEMENT """
         if m == "w":
-            pos[1] = (pos[1] - 1) % img.shape[0]
+            pos.y = (pos.y - 1) % img.shape[0]
         if m == "s":
-            pos[1] = (pos[1] + 1) % img.shape[0]
+            pos.y = (pos.y + 1) % img.shape[0]
         if m == "a":
-            pos[0] = (pos[0] - 1) % img.shape[1]
+            pos.x = (pos.x - 1) % img.shape[1]
         if m == "d":
-            pos[0] = (pos[0] + 1) % img.shape[1]
+            pos.x = (pos.x + 1) % img.shape[1]
 
         """ DRAWING """
         if m == "e" or m == " ":
             history.append(np.copy(img))
-            img[pos[1]][pos[0]] = list(hsv_to_rgb(color))
+            img[pos.y][pos.x] = list(hsv_to_rgb(color))
 
         if m == "f":
             history.append(np.copy(img))
-            img = flood_fill(pos, img, hsv_to_rgb(color), np.copy(img[pos[1]][pos[0]]))
+            img = flood_fill(pos, img, hsv_to_rgb(color), np.copy(img[pos.y][pos.x]))
 
         if m == "z":
             # Load most recent from history
@@ -440,7 +475,7 @@ def main():
 
             show_cursor()
             clear()
-            draw([-1], 1, 1, "APPLY FILTER", highlight_color)
+            draw(TRANSPARENT, Pos(1, 1), "APPLY FILTER", highlight_color)
             print()
             print("[esc]: Return\n")
             filters = [
@@ -481,7 +516,7 @@ def main():
 
             show_cursor()
             clear()
-            draw([-1], 1, 1, "QUIT", highlight_color)
+            draw(TRANSPARENT, Pos(x=1, y=1), "QUIT", highlight_color)
             print()
             print("[S]: Save and exit")
             print("[Q]: Quit without saving")
