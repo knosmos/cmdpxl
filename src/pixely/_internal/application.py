@@ -31,9 +31,12 @@ class Application:
     HISTORY = []
 
     FILENAME = None
+    SIZES = None
     IMG = None
 
-    def __init__(self):
+    ACTION = None # Action of trigger, create or open
+
+    def __init__(self, filename = None, size = None, trigger: str = None):
 
         # Initialize objects
         self.drawer = Drawer()
@@ -41,6 +44,15 @@ class Application:
         # OS dependant calls
         self.CLEAR = get_clear()
         self.GETCH = get_getch()
+
+        if filename != None:
+            self.FILENAME = filename
+
+        if size != None:
+            self.SIZES = size
+
+        if trigger != None:
+            self.ACTION = trigger.lower()
 
     def __resize__(self, filename, img):
         
@@ -235,47 +247,8 @@ class Application:
 
                 self.IN_MENU = False
 
-    def __initialize__(self):
+    def __start__(self):
         
-        self.CLEAR()
-
-        self.drawer.draw(
-            [-1]
-            ,1
-            ,1
-            ,"CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR"
-            ,COLORS["highlight"]
-        )
-
-        # Empty print
-        print("\n[O]: Open file")
-        print("[C]: Create new file")
-
-        option = " "
-
-        while not option in "ocOC":
-            option = self.GETCH()
-        
-        filename = input("File name: ")
-
-        # Load existing image
-        if option.lower() == "o":
-            img = cv2.imread(filename)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        # Create new image
-        else:
-            height = int(input("New image height: "))
-            width = int(input("New image width: "))
-            img = np.zeros((height,width,3), np.uint8)
-            img[:,:,:] = 250
-
-        self.CLEAR()
-        hide_cursor()
-
-        # Assign filename and img
-        self.FILENAME = filename
-        self.IMG = img
-
         # Start responsiveness thread
         t = Thread(
             target=self.__resize__
@@ -285,6 +258,55 @@ class Application:
         t.start()
 
         self.__loop__()
+
+    def __initialize__(self):
+        
+        self.CLEAR()
+
+        if self.FILENAME != None and self.ACTION == "open":
+            img = cv2.imread(self.FILENAME)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        else:
+            img = np.zeros((self.SIZES[0],self.SIZES[1],3), np.uint8)
+            img[:,:,:] = 250
+
+        self.CLEAR()
+        hide_cursor()
+
+        # Assign filename and img
+        self.IMG = img
+
+        self.__start__()
+
+        # self.drawer.draw(
+        #     [-1]
+        #     ,1
+        #     ,1
+        #     ,"CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR"
+        #     ,COLORS["highlight"]
+        # )
+
+        # Empty print
+        # print("\n[O]: Open file")
+        # print("[C]: Create new file")
+
+        # option = " "
+
+        # while not option in "ocOC":
+        #     option = self.GETCH()
+        
+        # filename = input("File name: ")
+
+        # Load existing image
+        # if option.lower() == "o":
+        #     img = cv2.imread(filename)
+        #     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # Create new image
+        # else:
+        #     height = int(input("New image height: "))
+        #     width = int(input("New image width: "))
+        #     img = np.zeros((height,width,3), np.uint8)
+        #     img[:,:,:] = 250
 
     def start(self):
         self.__initialize__()

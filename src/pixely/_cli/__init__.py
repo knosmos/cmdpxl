@@ -4,7 +4,8 @@ CLI for Pixely.
 
 # AVAILABLE COMMANDS
 META_COMMANDS = [
-    "start",
+    "open",
+    "create",
     "version"
 ]
 
