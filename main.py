@@ -4,6 +4,7 @@ import os
 import numpy as np
 from threading import Thread # Constantly check for terminal size update
 import time
+import argparse # parse commandline arguments
 
 ''' DISPLAY PARAMS '''
 highlight_color = [214, 39, 112]
@@ -250,23 +251,42 @@ def draw_interface(filename, img):
 def main():
     global padding_x, padding_y, color, pos, in_menu
 
-    clear()
-    draw([-1], 1, 1, "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", highlight_color)
-    print()
-    print("[O]: Open file")
-    print("[C]: Create new file")
-    option = " "
-    while not option in "ocOC":
-        option = getch()
-    filename = input("File name: ")
+    # If no arguments passed, display the welcome menu
+    if len(sys.argv) == 1:
+        clear()
+        draw([-1], 1, 1, "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", highlight_color)
+        print()
+        print("[O]: Open file")
+        print("[C]: Create new file")
+        option = " "
+        while not option in "oc":
+            option = getch().lower()
+        filename = input("File name: ")
+        if option == "c":
+            height = int(input("New image height: "))
+            width = int(input("New image width: "))
+    else:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("mode", help="'open' or 'create'")
+        parser.add_argument("filename", help="name of file to create/open")
+        parser.add_argument("-s","--size", help="dimensions of image (if creating); width height", nargs=2, type=int)
+        args = parser.parse_args()
+        
+        option = args.mode
+        if not option in ["open","create"]:
+            parser.print_help()
+            sys.exit()
+        
+        filename = args.filename
+        if args.size:
+            width, height = args.size
+    
     # Load existing image
-    if option.lower() == "o":
+    if option.lower() == "o" or option.lower() == "open":
         img = cv2.imread(filename)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # Create new image
     else:
-        height = int(input("New image height: "))
-        width = int(input("New image width: "))
         img = np.zeros((height,width,3), np.uint8)
         img[:,:,:] = 250
 
