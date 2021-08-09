@@ -8,7 +8,6 @@ from threading import Thread  # Constantly check for terminal size update
 from cmdpxl_terminal_io import getch, clear, show_cursor, hide_cursor
 from cmdpxl_datatypes import Pos, Color
 
-
 """ DISPLAY PARAMS """
 highlight_color = Color(214, 39, 112)
 secondary_color = Color(53, 204, 242)
@@ -333,7 +332,7 @@ def main():
     print("[O]: Open file")
     print("[C]: Create new file")
     option = " "
-    while not option in "ocOC":
+    while option not in "ocOC":
         option = getch()
     filename = input("File name: ")
     # Load existing image
@@ -453,9 +452,9 @@ def main():
             print()
             print("[S]: Save and exit")
             print("[Q]: Quit without saving")
-            print("\n[esc]: Cancel")
+            print("\n[Esc]: Cancel")
             option = " "
-            while not option in "sq\x1b":
+            while option not in "sq\x1b":
                 option = getch().lower()
             clear()
             if option == "s":
