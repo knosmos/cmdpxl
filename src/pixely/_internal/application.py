@@ -75,7 +75,7 @@ class Application:
             [-1]
             ,1+self.PADDING_X
             ,1+self.PADDING_Y
-            ,f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})"
+            ,f"PIXELY: {filename} ({img.shape[1]}x{img.shape[0]})"
             ,COLORS["highlight"]
         )
 

@@ -27,9 +27,9 @@ setup(
 	description="A pixel art console tool.",
 	long_description=long_description,
 	license="MIT",
-	url="https://github.com/pomaretta/pixely",
-	author=["Carlos Pomares", "Jieruei Chang (knosmos)"],
-	author_email="cpomaresp@gmail.com",
+	url="Change to original url.",
+	author=["Add contributors"],
+	author_email="To Change",
     package_dir={"": "src"},
 	packages=find_packages(
 		where="src"
