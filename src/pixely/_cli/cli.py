@@ -14,7 +14,7 @@ def main():
 
     parser.add_argument(
         'subcommand'
-        ,nargs="*"
+        ,nargs=1
         ,type=str
         ,help="The command to be executed."
     )
@@ -25,17 +25,13 @@ def main():
         ,type=str
         ,help="The command arguments to be used by the subcommand."
     )
-
+    
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
     
     argv = sys.argv[1:]
     args = parser.parse_args(argv)
-
-    # Force start functionality when passing empty subcommand
-    if len(args.subcommand) == 0:
-        args.subcommand.append("start")
 
     if not run_subcommand(
         subcommand=args.subcommand[0].lower()

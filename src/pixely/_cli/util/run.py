@@ -22,7 +22,7 @@ def run_subcommand(
         return False
 
     module = import_module(
-        "gpip._cli.commands.{}".format(subcommand)
+        "pixely._cli.commands.{}".format(subcommand)
         ,__package__
     )
     
