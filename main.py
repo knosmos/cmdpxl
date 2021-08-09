@@ -1,3 +1,12 @@
+'''
+
+comments made by umanochiocciola are preceded by ~
+
+use --clean flag to have the screen refresh on every input: it makes it a bit flashy, but (at least on my linux terminal),
+it's the only way not to have a partially drawn image on the right of the screen.
+
+'''
+
 import cv2 # Read/write images
 import sys # Write to terminal
 import os
@@ -24,26 +33,9 @@ padding_x = 1
 
 ''' INPUT '''
 # Define the getch function used to get keyboard input
-# https://stackoverflow.com/a/47548992
-if os.name == 'nt':
-    import msvcrt
-    def getch():
-        while True:
-            try:
-                return msvcrt.getch().decode()
-            except UnicodeDecodeError: # A keypress couldn't be decoded, ignore it
-                continue
-else:
-    import sys, tty, termios
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    def getch():
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
+
+# ~ just use the getch module (pip install getch)
+from getch import getch
 
 ''' MISC '''
 # Clear the terminal
@@ -251,8 +243,14 @@ def draw_interface(filename, img):
 def main():
     global padding_x, padding_y, color, pos, in_menu
 
+    #~ i want --clean to be indipendent from the other required args, so
+    
+    clean = 0
+    if '--clean' in sys.argv:
+        clean = 1
+
     # If no arguments passed, display the welcome menu
-    if len(sys.argv) == 1:
+    if len(sys.argv) == 1 or (len(sys.argv) == 2 and clean):
         clear()
         draw([-1], 1, 1, "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", highlight_color)
         print()
@@ -277,10 +275,11 @@ def main():
             parser.print_help()
             print("error: mode must be 'open' or 'create'")
             sys.exit()
-        
+
         filename = args.filename
         if args.size:
             width, height = args.size
+            
         elif option == "create":
             parser.print_help()
             print("error: dimensions must be included if creating image")
@@ -307,6 +306,7 @@ def main():
 
     # Main loop
     while True:
+        if clean: clear() # ~clear screen on every input, activate it with the --clean flag
         draw_interface(filename, img)
         m = getch()
 
@@ -419,3 +419,4 @@ def main():
             in_menu = False
 
 if __name__ == "__main__": main()
+
