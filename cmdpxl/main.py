@@ -2,28 +2,11 @@ import cv2  # Read/write images
 import sys  # Write to terminal
 import os
 import numpy as np
-from threading import Thread  # Constantly check for terminal size update
 import time
 
-
-class Color:
-    def __init__(self, *rgb_colors):
-        # Check if passing a tuple with three elements, like on draw_image
-        self.r, self.g, self.b = rgb_colors[0] if len(rgb_colors) == 1 else rgb_colors
-
-    def __iter__(self):
-        return iter((self.r, self.g, self.b))
-
-    def copy(self):
-        return Color(self.r, self.g, self.b)
-
-
-class Pos:
-    def __init__(self, x: int, y: int):
-        self.x, self.y = x, y
-
-    def __iter__(self):
-        return iter((self.x, self.y))
+from threading import Thread  # Constantly check for terminal size update
+from cmdpxl_terminal_io import getch, clear, show_cursor, hide_cursor
+from cmdpxl_datatypes import Pos, Color
 
 
 """ DISPLAY PARAMS """
@@ -34,7 +17,6 @@ edge_color = Color(200, 200, 200)
 padding_y = 1
 responsive_padding = True  # Change x padding on terminal resize
 
-
 color = Color(90, 125, 125)  # Default starting color
 pos = Pos(0, 0)  # Default cursor position
 
@@ -44,59 +26,6 @@ TRANSPARENT = Color(-1, 0, 0)
 # These are necessary for the responsiveness thread to work
 in_menu = False
 padding_x = 1
-
-""" INPUT """
-# Define the getch function used to get keyboard input
-# https://stackoverflow.com/a/47548992
-if os.name == "nt":
-    import msvcrt
-
-    def getch():
-        while True:
-            try:
-                return msvcrt.getch().decode()
-            except UnicodeDecodeError:  # A keypress couldn't be decoded, ignore it
-                continue
-
-
-else:
-    import sys, tty, termios
-
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-
-    def getch():
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-
-""" MISC """
-# Clear the terminal
-if os.name == "nt":
-
-    def clear():
-        os.system("cls")
-
-
-else:
-
-    def clear():
-        os.system("clear")
-
-
-def hide_cursor():
-    sys.stdout.write("\033[?25l")
-    sys.stdout.flush()
-
-
-def show_cursor():
-    sys.stdout.write("\x1b[?25h")
-    sys.stdout.flush()
-
 
 """ IMAGE DRAWING """
 
@@ -190,7 +119,7 @@ def flood_fill(fill_pos: Pos, img, fill_color: Color, original_color):
     for i, j in neighbors:
         if i >= 0 and j >= 0 and i < img.shape[0] and j < img.shape[1]:
             if np.array_equal(img[i][j], list(original_color)) and not np.array_equal(
-                img[i][j], list(fill_color)
+                    img[i][j], list(fill_color)
             ):
                 img = flood_fill(Pos(j, i), np.copy(img), fill_color, original_color)
     return img
@@ -361,9 +290,13 @@ def resize(filename: str, img: np.ndarray) -> None:
 
 
 def draw_interface(filename: str, img: np.ndarray) -> None:
-    # draws (most of) the paint ui
-    # menus are handled separately, and imgbox is drawn separately
-    # to reduce flickering
+    """
+    Draws (most of) the paint ui. Menus are handled separately, and imgbox is drawn separately to reduce flickering
+    :param filename:
+    :param img:
+    :return:
+    """
+
     draw(
         TRANSPARENT,
         Pos(x=1 + padding_x, y=1 + padding_y),
