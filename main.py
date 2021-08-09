@@ -2,15 +2,24 @@ import cv2 # Read/write images
 import sys # Write to terminal
 import os
 import numpy as np
+from threading import Thread # Constantly check for terminal size update
+import time
 
 ''' DISPLAY PARAMS '''
 highlight_color = [214, 39, 112]
 secondary_color = [53, 204, 242]
 edge_color = [200, 200, 200]
-padding_x = 1
-padding_y = 1
 
+padding_y = 1
 responsive_padding = True # Change x padding on terminal resize
+
+color = [90,125,125] # Default starting color
+pos = [0, 0] # Default cursor position
+
+''' GLOBALS '''
+# These are necessary for the responsiveness thread to work
+in_menu = False
+padding_x = 1
 
 ''' INPUT '''
 # Define the getch function used to get keyboard input
@@ -212,9 +221,34 @@ def change_value(color, amount):
     hsv_color[2] = min(max(0,hsv_color[2]),255)//25*25
     return hsv_color # hsv_to_rgb(hsv_color)
 
+''' RESPONSIVENESS '''
+def resize(filename, img):
+    global padding_x, in_menu
+    dimensions = [0,0]
+    while True:
+        # Repaint on window size change
+        if os.get_terminal_size() != dimensions and not in_menu:
+            clear()
+            dimensions = os.get_terminal_size()
+            if responsive_padding:
+                padding_x = (dimensions[0] - img.shape[1]*2)//2
+            draw_image_box(img)
+            draw_interface(filename, img)
+        time.sleep(0.2)
+
 ''' MAIN '''
+def draw_interface(filename, img):
+    # draws (most of) the paint ui
+    # menus are handled separately, and imgbox is drawn separately
+    # to reduce flickering
+    draw([-1], 1+padding_x, 1+padding_y, f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})", highlight_color)
+    color_select(color)
+    draw([-1], 1+padding_x, 8+padding_y+img.shape[0], "[wasd] move │ [e] draw    │ [f] fill", secondary_color)
+    draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[z] undo    │ [t] filters │ [esc] quit", secondary_color)
+    draw_image(img,pos)
+
 def main():
-    global padding_x, padding_y
+    global padding_x, padding_y, color, pos, in_menu
 
     clear()
     draw([-1], 1, 1, "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", highlight_color)
@@ -238,27 +272,17 @@ def main():
 
     clear()
     hide_cursor()
-    pos = [0,0]
-    color = [90,125,125]
 
-    dimensions = [0,0]
     history = []
 
+    # Start responsiveness thread
+    t = Thread(target = resize, args = [filename, img])
+    t.daemon = True
+    t.start()
+
+    # Main loop
     while True:
-        # Repaint on window size change
-        if os.get_terminal_size() != dimensions:
-            clear()
-            dimensions = os.get_terminal_size()
-            if responsive_padding:
-                padding_x = (dimensions[0] - img.shape[1]*2)//2
-            draw_image_box(img)
-
-        draw([-1], 1+padding_x, 1+padding_y, f"CMDPXL: {filename} ({img.shape[1]}x{img.shape[0]})", highlight_color)
-        color_select(color)
-        draw([-1], 1+padding_x, 8+padding_y+img.shape[0], "[wasd] move │ [e] draw    │ [f] fill", secondary_color)
-        draw([-1], 1+padding_x, 9+padding_y+img.shape[0], "[z] undo    │ [t] filters │ [esc] quit", secondary_color)
-        draw_image(img,pos)
-
+        draw_interface(filename, img)
         m = getch()
 
         ''' MOVEMENT '''
@@ -303,11 +327,13 @@ def main():
 
         ''' FILTERS '''
         if m == "t":
+            in_menu = True
+
             show_cursor()
             clear()
             draw([-1], 1, 1, "APPLY FILTER", highlight_color)
             print()
-            print("[C]: Cancel")
+            print("[esc]: Return\n")
             filters = [
                 ["G", "Grayscale", cv2.COLORMAP_BONE],
                 ["S", "Sepia", cv2.COLORMAP_PINK],
@@ -319,10 +345,10 @@ def main():
             for i in filters:
                 print(f"[{i[0]}]: {i[1]}")
             option = " "
-            while not (option in [i[0] for i in filters] or option == "C"):
+            while not (option in [i[0] for i in filters] or option == "\x1b"):
                 option = getch().upper()
             clear()
-            if option != "C":
+            if option != "\x1b":
                 history.append(np.copy(img))
                 if option == "I":
                     img = cv2.bitwise_not(img)
@@ -338,17 +364,21 @@ def main():
             hide_cursor()
             draw_image_box(img)
 
+            in_menu = False
+
         ''' QUIT '''
         if m == "\x1b": # esc
+            in_menu = True
+
             show_cursor()
             clear()
             draw([-1], 1, 1, "QUIT", highlight_color)
             print()
             print("[S]: Save and exit")
             print("[Q]: Quit without saving")
-            print("[C]: Cancel")
+            print("\n[esc]: Cancel")
             option = " "
-            while not option in "sqc":
+            while not option in "sq\x1b":
                 option = getch().lower()
             clear()
             if option == "s":
@@ -360,5 +390,7 @@ def main():
                 exit()
             hide_cursor()
             draw_image_box(img)
+
+            in_menu = False
 
 if __name__ == "__main__": main()
