@@ -5,7 +5,7 @@
 import numpy as np
 import sys
 
-from .. import COLORS
+from . import COLORS
 from .util.color import hsv_to_rgb, rgb_to_hsv
 
 class Drawer:

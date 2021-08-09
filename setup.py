@@ -34,6 +34,10 @@ setup(
 	packages=find_packages(
 		where="src"
 	),
+	scripts=[
+		"bin/pixely",
+		"bin/pixely.cmd"
+	],
     classifiers=[
 		"Intended Audience :: Developers",
 		"License :: OSI Approved :: MIT License",

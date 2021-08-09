@@ -14,7 +14,7 @@ def main():
 
     parser.add_argument(
         'subcommand'
-        ,nargs="?"
+        ,nargs="*"
         ,type=str
         ,help="The command to be executed."
     )
