@@ -12,7 +12,8 @@ cmdpxl has many exciting functionalities, including
 ## Installation
 Requires `opencv-python`. It *should* be multiplatform, but it has only been tested on Windows 10.
 
-Run with `py main.py`.
+## Usage
+Run with `py main.py`, or with `py main.py <open|create> <filename> [--size WIDTH HEIGHT]`.
 
 ## Why?
 Good question.
