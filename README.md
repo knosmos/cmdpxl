@@ -12,6 +12,12 @@ cmdpxl has many exciting functionalities, including
 ## Installation
 Requires `opencv-python`. It *should* be multiplatform, but it has only been tested on Windows 10.
 
+To install requirements, run:
+
+```sh
+pip install -r requirements.txt
+```
+
 ## Usage
 Run with `py main.py`, or with `py main.py <open|create> <filename> [--size WIDTH HEIGHT]`.
 
