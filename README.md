@@ -10,16 +10,34 @@ cmdpxl has many exciting functionalities, including
 - Cool image filters!
 
 ## Installation
-Requires `opencv-python`. It *should* be multiplatform, but it has only been tested on Windows 10.
 
-To install requirements, run:
-
+Install the package with:
 ```sh
-pip install -r requirements.txt
+pip install cmdpxl
 ```
 
 ## Usage
-Run with `py main.py`, or with `py main.py <open|create> <filename> [--size WIDTH HEIGHT]`.
+
+Run with `cmdpxl`.
+
+You can also specify the file path and resolution with cli, e.g., creating a new 10x10 image:
+
+```
+cmdpxl -f new_image.png -res 10,10
+```
+To get the full list of options:
+
+```
+$ cmdpxl --help
+Usage: cmdpxl [OPTIONS]
+
+Options:
+  -f, --filepath PATH      Path for the file you want to open
+  -res, --resolution TEXT  Image height and width separated by a comma, e.g.
+                           10,10
+  --help                   Show this message and exit.
+  
+```
 
 ## Why?
 Good question.
