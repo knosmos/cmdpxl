@@ -321,7 +321,22 @@ def draw_interface(filename: str, img: np.ndarray) -> None:
     draw_image(img, pos)
 
 
-@click.command()
+def draw_welcome_msg(func):
+    def wrapper():
+        clear()
+        draw(
+            TRANSPARENT,
+            Pos(x=1, y=1),
+            "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR",
+            highlight_color,
+        )
+        print("")
+        func()
+    return wrapper
+
+
+@draw_welcome_msg
+@click.command(name="cmdpxl")
 @click.option(
     "--filepath",
     "-f",
@@ -337,13 +352,6 @@ def draw_interface(filename: str, img: np.ndarray) -> None:
 def main(filepath, resolution):
     global padding_x, padding_y, color, pos, in_menu
 
-    clear()
-    draw(
-        TRANSPARENT,
-        Pos(x=1, y=1),
-        "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR",
-        highlight_color,
-    )
     # Load existing image
     image_path = Path(filepath)
     if image_path.exists() and image_path.is_file():
@@ -465,7 +473,7 @@ def main(filepath, resolution):
             print()
             print("[S]: Save and exit")
             print("[Q]: Quit without saving")
-            print("\n[Esc]: Cancel")
+            print("\n[esc]: Cancel")
             option = " "
             while option not in "sq\x1b":
                 option = getch().lower()
