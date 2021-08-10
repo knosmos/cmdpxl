@@ -12,7 +12,12 @@ cmdpxl has many exciting functionalities, including
 ## Installation
 Requires `opencv-python`. It *should* be multiplatform, but it has only been tested on Windows 10.
 
-Run with `py main.py`.
+Run with `py cmdpxl/main.py`.
+
+## Command line interface
+It also runs with `cli`, e.g., to create a 10x10 `png`:
+
+`py cmdpxl/main.py -f new_image.png -res 10,10`
 
 ## Why?
 Good question.
