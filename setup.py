@@ -13,7 +13,7 @@ with open("requirements.txt") as requirements_file:
 
 setup(
     author="Jieruei Chang",
-    author_email="",
+    author_email="jierueic@gmail.com",
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -35,11 +35,12 @@ setup(
     install_requires=requirements,
     license="MIT license",
     long_description=readme,
+    long_description_content_type="text/markdown",
     include_package_data=True,
     keywords=["cmdpxl", "opencv", "image-editor", "terminal-based"],
     name="cmdpxl",
     packages=find_packages(include=["cmdpxl", "cmdpxl.*"]),
     url="https://github.com/knosmos/cmdpxl",
-    version="0.1.0",
+    version="0.1.1",
     zip_safe=False,
 )
