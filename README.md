@@ -19,7 +19,14 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-Run with `py main.py`, or with `py main.py <open|create> <filename> [--size WIDTH HEIGHT]`.
+
+Run with `py cmdpxl/main.py`, or as follows: 
+
+`py cmdpxl/main.py -f new_image.png -res 10,10`
+
+To edit an existing file:
+
+`py cmdpxl/main.py -f file.png`
 
 ## Why?
 Good question.
