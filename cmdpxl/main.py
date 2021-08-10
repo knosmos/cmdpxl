@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import click
 import cv2  # Read/write images
 import sys  # Write to terminal
 import os
@@ -118,7 +121,7 @@ def flood_fill(fill_pos: Pos, img, fill_color: Color, original_color):
     for i, j in neighbors:
         if i >= 0 and j >= 0 and i < img.shape[0] and j < img.shape[1]:
             if np.array_equal(img[i][j], list(original_color)) and not np.array_equal(
-                    img[i][j], list(fill_color)
+                img[i][j], list(fill_color)
             ):
                 img = flood_fill(Pos(j, i), np.copy(img), fill_color, original_color)
     return img
@@ -318,7 +321,20 @@ def draw_interface(filename: str, img: np.ndarray) -> None:
     draw_image(img, pos)
 
 
-def main():
+@click.command()
+@click.option(
+    "--filepath",
+    "-f",
+    prompt="File path",
+    help="Path for the file you want to open",
+    type=click.Path(),
+)
+@click.option(
+    "--resolution",
+    "-res",
+    help="Image height and width separated by a comma, e.g. 10,10",
+)
+def main(filepath, resolution):
     global padding_x, padding_y, color, pos, in_menu
 
     clear()
@@ -328,21 +344,18 @@ def main():
         "CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR",
         highlight_color,
     )
-    print()
-    print("[O]: Open file")
-    print("[C]: Create new file")
-    option = " "
-    while option not in "ocOC":
-        option = getch()
-    filename = input("File name: ")
     # Load existing image
-    if option.lower() == "o":
-        img = cv2.imread(filename)
+    image_path = Path(filepath)
+    if image_path.exists() and image_path.is_file():
+        img = cv2.imread(filepath)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # Create new image
     else:
-        height = int(input("New image height: "))
-        width = int(input("New image width: "))
+        if resolution:
+            height, width = [int(r) for r in resolution.split(",")]
+        else:
+            height = int(input("New image height: "))
+            width = int(input("New image width: "))
         img = np.zeros((height, width, 3), np.uint8)
         img[:, :, :] = 250
 
@@ -352,13 +365,13 @@ def main():
     history = []
 
     # Start responsiveness thread
-    t = Thread(target=resize, args=[filename, img])
+    t = Thread(target=resize, args=[filepath, img])
     t.daemon = True
     t.start()
 
     # Main loop
     while True:
-        draw_interface(filename, img)
+        draw_interface(filepath, img)
         m = getch()
 
         """ MOVEMENT """
@@ -460,7 +473,7 @@ def main():
             if option == "s":
                 # Convert back to BGR before writing
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                cv2.imwrite(filename, img)
+                cv2.imwrite(filepath, img)
                 exit()
             elif option == "q":
                 exit()

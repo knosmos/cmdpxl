@@ -8,6 +8,7 @@ def getch():
     """
     if os.name == "nt":
         import msvcrt
+
         while True:
             try:
                 return msvcrt.getch().decode()
