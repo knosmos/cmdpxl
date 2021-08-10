@@ -13,7 +13,7 @@ cmdpxl has many exciting functionalities, including
 
 Install the package with:
 ```sh
-pip install git+https://github.com/douglascdev/cmdpxl@refactor
+pip install cmdpxl
 ```
 
 ## Usage
