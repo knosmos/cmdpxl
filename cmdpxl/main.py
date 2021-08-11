@@ -28,6 +28,7 @@ TRANSPARENT = Color(-1, 0, 0)
 # These are necessary for the responsiveness thread to work
 in_menu = False
 padding_x = 1
+img = None
 
 """ IMAGE DRAWING """
 
@@ -111,7 +112,7 @@ def draw_image(img, img_pos: Pos):
 
 
 def flood_fill(fill_pos: Pos, img, fill_color: Color, original_color):
-    img[fill_pos.y][fill_pos.x] = list(fill_color)
+    img[fill_pos.y][fill_pos.x] = np.array(list(fill_color))
     neighbors = [
         Pos(fill_pos.y - 1, fill_pos.x),
         Pos(fill_pos.y + 1, fill_pos.x),
@@ -273,8 +274,8 @@ def change_value(hsv_color: Color, amount: int) -> Color:
 """ RESPONSIVENESS """
 
 
-def resize(filename: str, img: np.ndarray) -> None:
-    global padding_x, in_menu
+def resize(filename: str) -> None:
+    global padding_x, in_menu, img
     dimensions = [0, 0]
     while True:
         # Repaint on window size change
@@ -291,7 +292,7 @@ def resize(filename: str, img: np.ndarray) -> None:
 """ MAIN """
 
 
-def draw_interface(filename: str, img: np.ndarray) -> None:
+def draw_interface(filename: str, img) -> None:
     """
     Draws (most of) the paint ui. Menus are handled separately, and imgbox is drawn separately to reduce flickering
     :param filename:
@@ -350,7 +351,7 @@ def draw_welcome_msg(func):
     help="Image height and width separated by a comma, e.g. 10,10",
 )
 def main(filepath, resolution):
-    global padding_x, padding_y, color, pos, in_menu
+    global padding_x, padding_y, color, pos, in_menu, img
 
     # Load existing image
     image_path = Path(filepath)
@@ -373,7 +374,7 @@ def main(filepath, resolution):
     history = []
 
     # Start responsiveness thread
-    t = Thread(target=resize, args=[filepath, img])
+    t = Thread(target=resize, args=[filepath])
     t.daemon = True
     t.start()
 
