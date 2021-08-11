@@ -283,7 +283,7 @@ def resize(filename: str) -> None:
             clear()
             dimensions = os.get_terminal_size()
             if responsive_padding:
-                padding_x = (dimensions[0] - img.shape[1] * 2) // 2
+                padding_x = (dimensions[0] - max(48, img.shape[1] * 2)) // 2
             draw_image_box(img)
             draw_interface(filename, img)
         time.sleep(0.2)
@@ -377,6 +377,8 @@ def main(filepath, resolution):
     t = Thread(target=resize, args=[filepath])
     t.daemon = True
     t.start()
+    dimensions = os.get_terminal_size()
+    padding_x = (dimensions[0] - max(48,img.shape[1] * 2)) // 2
 
     # Main loop
     while True:
