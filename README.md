@@ -20,23 +20,23 @@ pip install cmdpxl
 
 Run with `cmdpxl`.
 
-You can also specify the file path and resolution with cli, e.g., creating a new 10x10 image:
+You can also specify the file path and resolution: for example, to create a new image that is 20px wide and 10px tall you can use
 
 ```
-cmdpxl -f new_image.png -res 10,10
+cmdpxl -f new_image.png -res 20,10
 ```
 To get the full list of options:
 
 ```
 $ cmdpxl --help
-Usage: cmdpxl [OPTIONS]
+Usage: main.py [OPTIONS]
 
 Options:
   -f, --filepath PATH      Path for the file you want to open
   -res, --resolution TEXT  Image height and width separated by a comma, e.g.
-                           10,10
+                           20,10 for a 20x10 image. Note that no spaces can be
+                           used.
   --help                   Show this message and exit.
-  
 ```
 
 ## Why?
