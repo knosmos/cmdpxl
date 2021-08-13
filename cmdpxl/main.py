@@ -348,7 +348,7 @@ def draw_welcome_msg(func):
 @click.option(
     "--resolution",
     "-res",
-    help="Image height and width separated by a comma, e.g. 10,10",
+    help="Image height and width separated by a comma, e.g. 20,10 for a 20x10 image. Note that no spaces can be used.",
 )
 def main(filepath, resolution):
     global padding_x, padding_y, color, pos, in_menu, img
@@ -361,10 +361,10 @@ def main(filepath, resolution):
     # Create new image
     else:
         if resolution:
-            height, width = [int(r) for r in resolution.split(",")]
+            width, height = map(int, resolution.split(","))
         else:
-            height = int(input("New image height: "))
             width = int(input("New image width: "))
+            height = int(input("New image height: "))
         img = np.zeros((height, width, 3), np.uint8)
         img[:, :, :] = 250
 
