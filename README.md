@@ -39,5 +39,16 @@ Options:
   --help                   Show this message and exit.
 ```
 
+## Examples
+Here are some images that have been created with `cmdpxl`. If you have any images you'd like to share, please open a pull request or create an issue.
+
+![image](https://user-images.githubusercontent.com/30610197/130501861-2ea41d6f-5568-47d9-b7e4-764c9136c979.png)
+![image](https://user-images.githubusercontent.com/30610197/130502042-744f269e-9ffc-4089-81bb-5b58a15fa6db.png)
+![image](https://user-images.githubusercontent.com/30610197/130501975-88423180-de64-49ff-afc5-dd670d959e9c.png)
+![image](https://user-images.githubusercontent.com/30610197/130503771-4ae14006-494b-405c-9657-1eacd013c13f.png)
+
+
+
+
 ## Why?
 Good question.
