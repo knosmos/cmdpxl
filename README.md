@@ -11,9 +11,14 @@ cmdpxl has many exciting functionalities, including
 
 ## Installation
 
-Install the package with:
+PIP
 ```sh
 pip install cmdpxl
+```
+
+AUR
+```sh
+yay -S cmdpxl-git
 ```
 
 ## Usage
