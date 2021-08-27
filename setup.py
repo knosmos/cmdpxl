@@ -41,6 +41,6 @@ setup(
     name="cmdpxl",
     packages=find_packages(include=["cmdpxl", "cmdpxl.*"]),
     url="https://github.com/knosmos/cmdpxl",
-    version="0.1.1",
+    version="0.1.7",
     zip_safe=False,
 )

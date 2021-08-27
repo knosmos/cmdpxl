@@ -30,6 +30,9 @@ in_menu = False
 padding_x = 1
 img = None
 
+pan_x = 0
+pan_y = 0
+
 """ IMAGE DRAWING """
 
 
@@ -71,6 +74,10 @@ def draw_image_box(img):
     global padding_x
     offset_y = 6
     y, x, _ = img.shape
+    dimensions = os.get_terminal_size()
+    x = min(x, dimensions[0] // 2 - 2)
+    y = min(y, dimensions[1] - 12)
+
     box_top = "╭" + "─" * (x * 2) + "╮"
     box_mid = "│" + " " * (x * 2) + "│"
     box_bot = "╰" + "─" * (x * 2) + "╯"
@@ -91,19 +98,24 @@ def draw_image_box(img):
 
 
 def draw_image(img, img_pos: Pos):
+    global pan_x, pan_y
     offset_y = 6
     y, x, _ = img.shape
 
-    for j in range(y):
-        for i in range(x):
+    dimensions = os.get_terminal_size()
+    max_width = dimensions[0] // 2 - 2
+    max_height = dimensions[1] - 12
+
+    for j in range(pan_y, min(y, max_height + pan_y)):
+        for i in range(pan_x, min(x, max_width + pan_x)):
             if i == img_pos.x and j == img_pos.y:
                 text = "[]"
             else:
                 text = "  "
             draw(
                 Color(img[j][i]),
-                Pos(x=i * 2 + 2 + padding_x, y=j + 1 + offset_y + padding_y),
-                text,
+                Pos(x=(i - pan_x) * 2 + 2 + padding_x, y=j + 1 + offset_y + padding_y - pan_y),
+                text
             )
     sys.stdout.flush()
 
@@ -235,7 +247,6 @@ def color_select(color: Color, offset_y=1):
             text = "●"
         else:
             text = " "
-            # print(hsv_color[2])
         draw(
             ncolor_rgb,
             Pos(
@@ -283,7 +294,7 @@ def resize(filename: str) -> None:
             clear()
             dimensions = os.get_terminal_size()
             if responsive_padding:
-                padding_x = (dimensions[0] - max(48, img.shape[1] * 2)) // 2
+                padding_x = max(1,(dimensions[0] - max(48, img.shape[1] * 2)) // 2)
             draw_image_box(img)
             draw_interface(filename, img)
         time.sleep(0.2)
@@ -299,6 +310,7 @@ def draw_interface(filename: str, img) -> None:
     :param img:
     :return:
     """
+    dimensions = os.get_terminal_size()
 
     draw(
         TRANSPARENT,
@@ -309,14 +321,14 @@ def draw_interface(filename: str, img) -> None:
     color_select(color)
     draw(
         TRANSPARENT,
-        Pos(x=1 + padding_x, y=8 + padding_y + img.shape[0]),
-        "[wasd] move │ [e] draw    │ [f] fill",
+        Pos(x=1 + padding_x, y=dimensions[1]-2),
+        "[wasd] move | [e] draw | [f] fill | [arrows] pan",
         secondary_color,
     )
     draw(
         TRANSPARENT,
-        Pos(x=1 + padding_x, y=9 + padding_y + img.shape[0]),
-        "[z] undo    │ [t] filters │ [esc] quit",
+        Pos(x=1 + padding_x, y=dimensions[1]-1),
+        "[z] undo | [t] filters | [esc] quit",
         secondary_color,
     )
     draw_image(img, pos)
@@ -351,7 +363,7 @@ def draw_welcome_msg(func):
     help="Image height and width separated by a comma, e.g. 20,10 for a 20x10 image. Note that no spaces can be used.",
 )
 def main(filepath, resolution):
-    global padding_x, padding_y, color, pos, in_menu, img
+    global padding_x, padding_y, color, pos, in_menu, img, pan_x, pan_y
 
     # Load existing image
     image_path = Path(filepath)
@@ -377,8 +389,12 @@ def main(filepath, resolution):
     t = Thread(target=resize, args=[filepath])
     t.daemon = True
     t.start()
+    clear()
     dimensions = os.get_terminal_size()
-    padding_x = (dimensions[0] - max(48,img.shape[1] * 2)) // 2
+    if responsive_padding:
+        padding_x = max(1,(dimensions[0] - max(48, img.shape[1] * 2)) // 2)
+    draw_image_box(img)
+    draw_interface(filepath, img)
 
     # Main loop
     while True:
@@ -394,6 +410,22 @@ def main(filepath, resolution):
             pos.x = (pos.x - 1) % img.shape[1]
         if m == "d":
             pos.x = (pos.x + 1) % img.shape[1]
+
+        """ PAN """
+        if m == "up":
+            pan_y -= 1
+        if m == "left":
+            pan_x -= 1
+        if m == "right":
+            pan_x += 1
+        if m == "down":
+            pan_y += 1
+        dimensions = os.get_terminal_size()
+        max_width = dimensions[0] // 2 - 2
+        max_height = dimensions[1] - 12
+        pan_x = max(0, min(img.shape[1]-max_width, pan_x))
+        pan_y = max(0, min(img.shape[0]-max_height, pan_y))
+
 
         """ DRAWING """
         if m == "e" or m == " ":
