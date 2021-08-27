@@ -37,14 +37,19 @@ def getch():
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         # Deal with arrow keys
-        if ch == '\x1b[A':
-            return "up"
-        elif ch == '\x1b[B':
-            return "down"
-        elif ch == '\x1b[C':
-            return "right"
-        elif ch == '\x1b[D':
-            return "left"
+        #print(ch)
+        if ch == '\x1b':
+            for i in range(2):
+                ch = sys.stdin.read(1)
+                sys.stdin.flush()
+            if ch == 'A':
+                return "up"
+            elif ch == 'B':
+                return "down"
+            elif ch == 'C':
+                return "right"
+            elif ch == 'D':
+                return "left"
         return ch
 
 

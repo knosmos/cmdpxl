@@ -328,7 +328,7 @@ def draw_interface(filename: str, img) -> None:
     draw(
         TRANSPARENT,
         Pos(x=1 + padding_x, y=dimensions[1]-1),
-        "[z] undo | [t] filters | [esc] quit",
+        "[z] undo | [t] filters | [x] quit",
         secondary_color,
     )
     draw_image(img, pos)
@@ -465,7 +465,7 @@ def main(filepath, resolution):
             clear()
             draw(TRANSPARENT, Pos(1, 1), "APPLY FILTER", highlight_color)
             print()
-            print("[esc]: Return\n")
+            print("[X]: Return\n")
             filters = [
                 ["G", "Grayscale", cv2.COLORMAP_BONE],
                 ["S", "Sepia", cv2.COLORMAP_PINK],
@@ -480,7 +480,7 @@ def main(filepath, resolution):
             while not (option in [i[0] for i in filters] or option == "\x1b"):
                 option = getch().upper()
             clear()
-            if option != "\x1b":
+            if option != "X":
                 history.append(np.copy(img))
                 if option == "I":
                     img = cv2.bitwise_not(img)
@@ -499,7 +499,7 @@ def main(filepath, resolution):
             in_menu = False
 
         """ QUIT """
-        if m == "\x1b":  # esc
+        if m == "x":
             in_menu = True
 
             show_cursor()
@@ -508,9 +508,9 @@ def main(filepath, resolution):
             print()
             print("[S]: Save and exit")
             print("[Q]: Quit without saving")
-            print("\n[esc]: Cancel")
+            print("\n[X]: Cancel")
             option = " "
-            while option not in "sq\x1b":
+            while option not in "sqx":
                 option = getch().lower()
             clear()
             if option == "s":
