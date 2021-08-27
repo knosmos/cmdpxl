@@ -8,8 +8,8 @@ import numpy as np
 import time
 
 from threading import Thread  # Constantly check for terminal size update
-from terminal_io import getch, clear, show_cursor, hide_cursor
-from datatypes import Pos, Color
+from cmdpxl.terminal_io import getch, clear, show_cursor, hide_cursor
+from cmdpxl.datatypes import Pos, Color
 
 """ DISPLAY PARAMS """
 highlight_color = Color(214, 39, 112)
