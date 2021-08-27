@@ -10,10 +10,21 @@ def getch():
         import msvcrt
 
         while True:
+            key = msvcrt.getch()
             try:
-                return msvcrt.getch().decode()
-            except UnicodeDecodeError:  # A keypress couldn't be decoded, ignore it
-                continue
+                return key.decode()
+            except UnicodeDecodeError:  # A keypress couldn't be decoded
+                # is it an arrow key?
+                if key == b"\xe0":
+                    key = msvcrt.getch()
+                    if key == b"H":
+                        return "up"
+                    if key == b"P":
+                        return "down"
+                    if key == b"K":
+                        return "left"
+                    if key == b"M":
+                        return "right"
     else:
         import sys, tty, termios
 
@@ -25,6 +36,15 @@ def getch():
             ch = sys.stdin.read(1)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        # Deal with arrow keys
+        if ch == '\x1b[A':
+            return "up"
+        elif ch == '\x1b[B':
+            return "down"
+        elif ch == '\x1b[C':
+            return "right"
+        elif ch == '\x1b[D':
+            return "left"
         return ch
 
 
